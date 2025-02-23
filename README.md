@@ -1,4 +1,4 @@
-# Suricata-lab
+# Suricata Lab
 
 ## Overview
 
