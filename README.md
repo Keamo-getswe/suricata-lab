@@ -14,7 +14,7 @@ An Intrusion detection systems (IDS) is a security control implemented to accura
 
 ### System Specification
 
-The lab was set up using 2 computers, one with the defended network and 1 with which to attack. The defended network was run on a Windows 11 machine using 16GB RAM and 500GB storage. The attacker ran on Ubuntu 22.04 machine using 8GB RAM and 500GB storage. VMs were hosted on Oracle VirtualBox on both physical machines.
+The lab was set up using 2 computers, one with the defended network and 1 with which to attack. The defended network VMs ran on a Windows 11 machine using 16GB RAM and 500GB storage. The attacker VM ran on Ubuntu 22.04 machine using 8GB RAM and 500GB storage. VMs were hosted on Oracle VirtualBox on both physical machines.
 
 The following VM configurations were applied on VirtualBox:
 <br>
@@ -42,14 +42,19 @@ The service was up and running. The Suricata /etc/suricata/suricata.yaml file wa
 - Defined the HOME_NET variable based a custom subnet.
 - Set EXTERNAL_NET to "any".
 - Specified the rule location as /etc/suricata/rules/custom.rules (and later created the file).
-- To test the functioning of Suricata, the following rule was added to the custom.rules file:<br>
+- Set the packet capture interface to that of my local machine.
+- To test that Suricata could monitor network traffic, the following rule was added to the custom.rules file:<br>
 ```alert any any -> $HOME_NET any (msg:""; flags:S; window:1024; threshold: type both, track_by_src, count 5, seconds 10; sid: 1000001; rev:1;)```
-- After saving the file, suricata was restarted using:
+- After saving the file, Suricata was restarted using:<br>
 ```sudo systemctl restart suricata```
+- To ensure that the configuration worked, the Suricata log file was checked using:<br>
+```cat /var/log/suricata.suricata.log```
+- Verified successful configuration from MTU being found for the specified network interface, all default log files being initialised, the rule being processed with the 1 rule in it being successfully loaded and all AFP capture threads running.
+- To ensure that the rule was working, I initiated an nmap scan on my attacker machine (after it was set up). I then searched for the alert message for the rule in /var/log/suricata/eve.json on the Suricata server.
 
-### Deploy and configure the lab environment (Kali Linux VM)
+### Attacker Machine - Kali Linux
 
-- Configure Kali Linux as an attacker machine with penetration testing tools.
+The attacker VM was setup using a .vbox file acquired from [the Kali website](http://www.kali.org), hence 80GB preset storage was required. This was also set up with 4GB RAM and 4 CPU cores. The same process was repeated for the initial boot, in addition to confirming that required tools (Nmap and Metasploit Framework) were installed.
 
 ## Simulating and Detecting Attacks:
 
