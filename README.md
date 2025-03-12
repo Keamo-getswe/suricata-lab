@@ -72,12 +72,54 @@ As before, the system was configured, booted and logged in, however given that M
 
 ## Simulating and Detecting Attacks:
 
+To monitor the communication between the attacker and the victim (Metasploitable machine), tcpdump was initiated on the Suricata server using this command:<br>
+```sudo tcpdump -i <interface> -vvv -nn "host <attacker IP address> > foo.txt```<br>
+Thereafter, an attack was launched and once completed, the packet capture was stopped and the contents examined for patterns that could address each challenge.
+
 ### Stealth Scan
 
-Tcpdump was initiated using the following command:<br>
-```sudo tcpdump -i <interface> -vvv -nn "host <attacker IP address> > stealth.txt```<br>
-The following was then run from the attacker, targeting the Metasploitable machine:<br>
-```nmap -sS 192.168.0.230```<br>
+Challenge: _Create a Suricata rule to detect TCP SYN packets sent to multiple ports within a short time frame, indicative of Nmap stealth scans._
+
+The command for the scan was:<br>
+```nmap -sS 192.168.8.230```<br>
+The result of the scan was:<scan-screenshot>
+The rule crafted was:<br>
+```alert tcp any any -> $HOME_NET any (msg: "Possible Nmap stealth scan detected"; flag: S; window: 1024; threshold: typ both, track_by_src, count 5, seconds 10, sid: 1000001; rev:1;)```<br>
+This rule alerts on TCP packets, with the SYN flag set, for any port in $HOME_NET. It specifically triggers when a single source sends 5 or more SYN packets within 10 seconds.
+
+### OS Fingerprinting Scan
+
+Challenge: _Develop a Suricata rule to detect ICMP echo requests and responses with specific TTL values, characteristic of Nmap OS fingerprinting activities._
+
+The command for the scan was:<br>
+```nmap -O 192.168.8.230```<br>
+The result of the scan was:<br><scan-screenshot><br>
+The rules crafted were:<br>
+```alert icmp any any -> $HOME_NET any (msg: "ECHO ICMP request detected"; ttl:>45; ttl:<60; sid: 1000002; rev:1;)```<br>
+```alert icmp $HOME_NET any -> any any (msg: "ECHO ICMP response detected"; ttl: 64; sid: 1000003; rev:1;)```<br>
+The first rule alerts on ICMP Echo Request packets sent to $HOME_NET with a TTL between 46 and 5,9 which may help detect operating system specific fingerprinting attempts or unusual ping behavior. The second rule alerts on responses sent with TTL values of 64 (characteristic of Linux-based operating systems).
+
+### Service Version Scan
+
+Challenge: _Formulate a Suricata rule to detect Nmap service version detection probes based on unique HTTP GET requests or TCP SYN/ACK packets._
+
+The command for the scan was:<br>
+```nmap -sV 192.168.8.230```<br>
+The result of the scan was:<br><scan-screenshot><br>
+The rule crafted was:<br>
+```alert tcp any any -> $HOME_NET any (msg: "Nmap service version scan detected"; flow:established, to_server; content: "nmap"; http_header; sid: 1000004; rev:1;)```<br>
+This rule looks for the string "nmap" in the HTTP headers of TCP traffic going to $HOME_NET when the connection is established and directed to a server.
+
+### Metasploit Exploit Payload - Unreal IRC 3281 (add user payload)
+
+Challenge: _Craft a Suricata rule to detect Metasploit exploit payload traffic based on unique signatures or payloads commonly used in exploits._
+
+Metasploit Framework was launched using ```msfconsole``` on the attacker. With reference to the service versions obtained earlier, an exploit for the Unreal IRC was found using:<br>
+```msf6> search unreal irc```<br>
+The result of the scan was:<br><scan-screenshot><br>
+The rule crafted was:<br>
+```alert tcp any any -> $HOME_NET any (msg: "Nmap service version scan detected"; flow:established, to_server; content: "nmap"; http_header; sid: 1000004; rev:1;)```<br>
+This rule looks for the string "nmap" in the HTTP headers of TCP traffic going to $HOME_NET when the connection is established and directed to a server.
 
 - Perform network reconnaissance (Nmap scans) and detect scan patterns.
 - Launch remote code execution attacks (Metasploit exploits) and monitor reverse shells.
