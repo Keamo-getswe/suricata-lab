@@ -80,49 +80,52 @@ Thereafter, an attack was launched and once completed, the packet capture was st
 
 Challenge: _Create a Suricata rule to detect TCP SYN packets sent to multiple ports within a short time frame, indicative of Nmap stealth scans._
 
-The command for the scan was:<br>
-```nmap -sS 192.168.8.230```<br>
-The result of the scan was:<scan-screenshot>
+The nmap scan command and result of the scan was:<br>
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/service-version-scan.png?raw=true">
 The rule crafted was:<br>
 ```alert tcp any any -> $HOME_NET any (msg: "Possible Nmap stealth scan detected"; flag: S; window: 1024; threshold: typ both, track_by_src, count 5, seconds 10, sid: 1000001; rev:1;)```<br>
-This rule alerts on TCP packets, with the SYN flag set, for any port in $HOME_NET. It specifically triggers when a single source sends 5 or more SYN packets within 10 seconds.
+This rule alerts on TCP packets, with the SYN flag set, for any port in $HOME_NET. It specifically triggers when a single source sends 5 or more SYN packets within 10 seconds.<br>
+<stealth-scan-packets>
 
 ### OS Fingerprinting Scan
 
 Challenge: _Develop a Suricata rule to detect ICMP echo requests and responses with specific TTL values, characteristic of Nmap OS fingerprinting activities._
 
-The command for the scan was:<br>
-```nmap -O 192.168.8.230```<br>
-The result of the scan was:<br><scan-screenshot><br>
+The nmap scan command and result of the scan was:<br>
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/os-fingerprint-scan.png?raw=true">
 The rules crafted were:<br>
 ```alert icmp any any -> $HOME_NET any (msg: "ECHO ICMP request detected"; ttl:>45; ttl:<60; sid: 1000002; rev:1;)```<br>
 ```alert icmp $HOME_NET any -> any any (msg: "ECHO ICMP response detected"; ttl: 64; sid: 1000003; rev:1;)```<br>
-The first rule alerts on ICMP Echo Request packets sent to $HOME_NET with a TTL between 46 and 5,9 which may help detect operating system specific fingerprinting attempts or unusual ping behavior. The second rule alerts on responses sent with TTL values of 64 (characteristic of Linux-based operating systems).
+The first rule alerts on ICMP Echo Request packets sent to $HOME_NET with a TTL between 46 and 5,9 which may help detect operating system specific fingerprinting attempts or unusual ping behavior. The second rule alerts on responses sent with TTL values of 64 (characteristic of Linux-based operating systems).<br>
+<OS-scan-packets>
 
 ### Service Version Scan
 
 Challenge: _Formulate a Suricata rule to detect Nmap service version detection probes based on unique HTTP GET requests or TCP SYN/ACK packets._
 
-The command for the scan was:<br>
-```nmap -sV 192.168.8.230```<br>
-The result of the scan was:<br><scan-screenshot><br>
+The nmap scan command and result of the scan was:<br>
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/stealth-scan.png?raw=true">
 The rule crafted was:<br>
 ```alert tcp any any -> $HOME_NET any (msg: "Nmap service version scan detected"; flow:established, to_server; content: "nmap"; http_header; sid: 1000004; rev:1;)```<br>
-This rule looks for the string "nmap" in the HTTP headers of TCP traffic going to $HOME_NET when the connection is established and directed to a server.
+This rule looks for the string "nmap" in the HTTP headers of TCP traffic going to $HOME_NET when the connection is established and directed to a server.<br>
+<sv-scan-packets>
 
 ### Metasploit Exploit Payload - Unreal IRC 3281 (add user payload)
 
 Challenge: _Craft a Suricata rule to detect Metasploit exploit payload traffic based on unique signatures or payloads commonly used in exploits._
 
-Metasploit Framework was launched using ```msfconsole``` on the attacker. With reference to the service versions obtained earlier, an exploit for the Unreal IRC was found using:<br>
-```msf6> search unreal irc```<br>
-The result of the scan was:<br><scan-screenshot><br>
-The rule crafted was:<br>
-```alert tcp any any -> $HOME_NET any (msg: "Nmap service version scan detected"; flow:established, to_server; content: "nmap"; http_header; sid: 1000004; rev:1;)```<br>
-This rule looks for the string "nmap" in the HTTP headers of TCP traffic going to $HOME_NET when the connection is established and directed to a server.
+Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the Unreal IRC module was found and run using the following sequence of commands:<br>
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-search.png?raw=true">
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-settings.png?raw=true">
 
-- Perform network reconnaissance (Nmap scans) and detect scan patterns.
-- Launch remote code execution attacks (Metasploit exploits) and monitor reverse shells.
+The following was run on the victim to confirm the newly added user:<br>
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-user-added.png?raw=true"><br>
+
+The rule crafted was:<br>
+```alert tcp any any -> $HOME_NET 6667 (msg: "Metasploit Unreal IRC 3821 add user payload detected"; content: "echo"; pcre: "/echo.*\/etc\/(passwd|sudoers)/"; sid: 1000005; rev:1;)```<br>
+This rule detects attempts to add a user by executing an echo command to modify /etc/passwd or /etc/sudoers. It looks for the keyword "echo" and uses a PCRE pattern to match commands writing to these files on TCP port 6667 (IRC).
+
+### Metasploit Reverse Shell 
 
 ## Evaluating and Improving Detection:
 
