@@ -226,6 +226,15 @@ This rule flags outbound payload transfers where the payload's header starts wit
 
 ### Stealth Scan
 
+Common patterns within the nmap-stealth.pcap file (see image below) used to craft the rule include:
+- The SYN flag was set in packets sent from attacker and no packets with ACK flag were returned following SYN/ACK packets from the victim.
+- A large number of packets was sent from the attacker in a short timeframe
+- The window size was fixed at 1024
+
+<img src="">
+
+Crafting the rule with the above properties in mind was done to cover as many characteristics of a basic attack as possible. The fixed window size is a default setting used in Nmap scans as is the singular source IP address. Furthermore, the rule detected the T3 timing setting (default for the scan run in this attack) and should be able to detect settings as low as T1, approximately 6 packets/10 sec. Given that the challenge was to write 1 rule, it served its purpose by successfully detecting the attacks.
+
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
 - Document findings and potential improvements to enhance Suricata’s detection capabilities.
