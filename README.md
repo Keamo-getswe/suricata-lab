@@ -115,10 +115,10 @@ On the attacker, the nmap scan command below was used and result of the scan was
 
 The rules crafted from the packets captured were:<br>
 ```
-alert icmp any any -> $HOME_NET any (msg: "ECHO ICMP request detected"; ttl:>45; ttl:<60; sid: 1000002; rev:1;)
+alert icmp any any -> $HOME_NET any (msg: "ECHO ICMP request detected"; ttl:>39; ttl:<60; sid: 1000002; rev:1;)
 alert icmp $HOME_NET any -> any any (msg: "ECHO ICMP response detected"; ttl: 64; sid: 1000003; rev:1;)
 ```
-The first rule alerts on ICMP Echo Request packets sent to $HOME_NET with a TTL between 46 and 5,9 which may help detect operating system specific fingerprinting attempts or unusual ping behavior. The second rule alerts on responses sent with TTL values of 64 (characteristic of Linux-based operating systems).<br>
+The first rule alerts on ICMP Echo Request packets sent to $HOME_NET with a TTL between 39 and 59 which may help detect operating system specific fingerprinting attempts or unusual ping behavior. The second rule alerts on responses sent with TTL values of 64 (characteristic of Linux-based operating systems).<br>
 
 ### Service Version Scan
 
@@ -231,11 +231,21 @@ Common patterns within the nmap-stealth.pcap file (see image below) used to craf
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/stealth-pcap.png?raw=true">
 
-The selected properties were chosen to capture as many fundamental characteristics of stealth scans as possible. The fixed window size, singular source IP address, and default probe frequency setting (T3) were all default parameters of the scan. The rule was designed to account for these defaults while also adapting to variations in probe frequency, ranging from T1 (on the lower end) to as high as T5. Such evasive techniques manipulate packet transmission frequency to evade detection. While flexible in addressing probe frequency, the rule does not address more sophisticated evasion techniques that alter window sizes, use carefully crafted delays or even scan a smaller port range. Nevertheless, given that the challenge was to write 1 rule, it successfully served its purpose and could be used to detect basic scans such as those performed by script kiddies. To improve its efficacy against more sophisticated scans, more rules should be developted to address evasion techniques targeting various other aspects of the packets captured. 
+The selected properties were chosen to capture as many fundamental characteristics of stealth scans as possible. The fixed window size, singular source IP address, and default probe frequency setting (T3) were all default parameters of the scan. The rule was designed to account for these defaults while also adapting to variations in probe frequency, ranging from T1 (on the lower end) to as high as T5. Such evasive techniques manipulate packet transmission frequency to evade detection. While flexible in addressing probe frequency, the rule does not address more sophisticated evasion techniques that alter window sizes, use carefully crafted delays or even scan a smaller port range. Nevertheless, given that the challenge was to write 1 rule, it successfully served its purpose and could be used to detect basic scans such as those performed by script kiddies. To improve its efficacy against more sophisticated scans, more rules should be developed to address evasion techniques targeting various other aspects of the packets captured. 
 
 ### OS Fingerprinting
 
-From the nmap-os
+From the nmap-os-fingerprint.pcap file (see image below), the following properties were deemed essential to solve the challenge:
+- ICMP Echo Request packets sent with a TTL value between 39 and 59
+- ICMP Echo Reply packets consistently returning with a TTL of 64, suggesting that the responses originate from a system with a default TTL value of 64.
+
+Nmap’s OS detection relies on measuring how different operating systems respond to crafted probe packets. The first rule accounts for this by flagging ICMP Echo Requests within a specific TTL range, which aligns with Nmap’s method of analyzing TTL variations to infer OS characteristics. Additionally, the second rule detects ICMP Echo Replies with a TTL of 64, a common default setting for various Debian-based operating systems such as the Metasploitable machine.
+
+However, while the rules effectively identify basic ICMP-based fingerprinting attempts, the first rule does not account for more advanced techniques, such as crafted packets with widely variable TTL values or fragmented probes. In the latter case, if Suricata does not perform packet reassembly before applying rules, the TTL field may not be available causing the rule to miss the detection. Another issues concerns the challenge specifying the ICMP protocol. Consequently, both rules do not account for mixed-protocol fingerprinting, evident from the use of TCP in the pcap file. It is also believed that the challenge is not realistic as legitimate uses of ICMP within a network could trigger many false positives. An example would be an error reporting due to an unreachable destination. An improvement to the first rule would be to factor in the packet rate for more granular detection as well as a business policy with a broader view of a system. Nonetheless, given the challenge constraint, these effectively highlight basic OS fingerprinting attempts and provide a foundation for further refinement.
+
+### Service Scan
+
+
 
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
