@@ -211,7 +211,9 @@ alert tcp any any -> $HOME_NET any (msg:"ELF file transfer detected"; flow:to_cl
 
 This rule flags outbound payload transfers where the payload's header starts with the ELF magic number (0x7F 45 4C 46), indicating an ELF file transfer.
 
-## Evaluating and Improving Detection:
+## Evaluation and Improvements:
+
+### Stealth Scan
 
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
