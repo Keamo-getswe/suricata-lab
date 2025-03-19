@@ -231,13 +231,17 @@ Common patterns within the nmap-stealth.pcap file (see image below) used to craf
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/stealth-pcap.png?raw=true">
 
-The selected properties were chosen to capture as many fundamental characteristics of stealth scans as possible. The fixed window size, singular source IP address, and default probe frequency setting (T3) were all default parameters of the scan. The rule was designed to account for these defaults while also adapting to variations in probe frequency, ranging from T1 (on the lower end) to as high as T5. Such evasive techniques manipulate packet transmission frequency to evade detection. While flexible in addressing probe frequency, the rule does not address more sophisticated evasion techniques that alter window sizes, use carefully crafted delays or even scan a smaller port range. Nevertheless, given that the challenge was to write 1 rule, it successfully served its purpose and could be used to detect basic scans such as those performed by script kiddies. To improve its efficacy against more sophisticated scans, more rules should be developed to address evasion techniques targeting various other aspects of the packets captured. 
+The selected properties were chosen to capture as many fundamental characteristics of stealth scans as possible. The fixed window size, singular source IP address, and default probe frequency setting (T3) were all default parameters of the scan. The rule was designed to account for these defaults while also adapting to variations in probe frequency, ranging from T1 (on the lower end) to as high as T5. Such evasive techniques manipulate packet transmission frequency to evade detection.
+
+While flexible in addressing probe frequency, the rule does not address more sophisticated evasion techniques that alter window sizes, use carefully crafted delays or even scan a smaller port range. Nevertheless, given that the challenge was to write 1 rule, it successfully served its purpose and could be used to detect basic scans such as those performed by script kiddies. To improve its efficacy against more sophisticated scans, more rules should be developed to address evasion techniques targeting various other aspects of the packets captured. 
 
 ### OS Fingerprinting
 
 From the nmap-os-fingerprint.pcap file (see image below), the following properties were deemed essential to solve the challenge:
 - ICMP Echo Request packets sent with a TTL value between 39 and 59
 - ICMP Echo Reply packets consistently returning with a TTL of 64, suggesting that the responses originate from a system with a default TTL value of 64.
+
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/os-fingerprint-pcap.png">
 
 Nmap’s OS detection relies on measuring how different operating systems respond to crafted probe packets. The first rule accounts for this by flagging ICMP Echo Requests within a specific TTL range, which aligns with Nmap’s method of analyzing TTL variations to infer OS characteristics. Additionally, the second rule detects ICMP Echo Replies with a TTL of 64, a common default setting for various Debian-based operating systems such as the Metasploitable machine.
 
