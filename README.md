@@ -83,9 +83,9 @@ The system was configured, booted and logged into. Given that Metasploitable 2 i
 
 ## Methodology - Attacking and Detecting:
 
-To monitor the communication between the attacker and the victim for each attack, tcpdump was initiated on the Suricata server using this command:<br>
-```sudo tcpdump -i <interface> -vvv -nn "host 192.168.134 > <exercise name>.txt```<br>
-Thereafter, an attack was launched and once completed, the packet analysis was stopped and the contents examined for patterns that could address each challenge.
+This section describes the steps taken to solve each challenge from [this repo](https://github.com/0xrajneesh/Suricata-IDS-Home-Lab). To monitor the communication between the attacker and the victim for each attack, tcpdump was initiated on the Suricata server and the network traffic was written to a pcap file as follows:<br>
+```sudo tcpdump -i <interface> -vvv -nn -w <exercise name>.pcap "host 192.168.134```<br>
+Thereafter, an attack was launched and once completed, the packet analysis was stopped and the contents examined for patterns that could address each challenge. The findings from the examination of each attack are detailed in the Evaluation and Improvements section.
 
 ### Stealth Scan
 
@@ -221,6 +221,8 @@ alert tcp any any -> $HOME_NET any (msg:"ELF file transfer detected"; flow:to_cl
 This rule flags outbound payload transfers where the payload's header starts with the ELF magic number (0x7F454C46), indicating an ELF file transfer.
 
 ## Evaluation and Improvements:
+
+This section describes the findings from examining the pcap files obtained in each attack. The files are named according to the theme of each challenge. Key properties of each attack are analysed, translated into a rule and the rule is then evaluated for real world efficacy.  
 
 ### Stealth Scan
 
