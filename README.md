@@ -222,7 +222,7 @@ This rule flags outbound payload transfers where the payload's header starts wit
 
 ## Evaluation and Improvements:
 
-This section describes the findings from examining the pcap files obtained in each attack. The files are named according to the theme of each challenge. Key properties of each attack are analysed, translated into a rule and the rule is then evaluated for real world efficacy.  
+This section describes the findings from examining the pcap files obtained in each attack. The files are named according to the theme of each challenge. Key properties of each attack are analysed, translated into a rule and the rule is then evaluated for real world efficacy. Where the behaviour of an attack could not be determined from the pcap file, an internet search was performed to learn more and was used to support the evaluation.  
 
 ### Stealth Scan
 
@@ -251,7 +251,19 @@ However, while the rules effectively identify basic ICMP-based fingerprinting at
 
 ### Service Scan
 
+The following key points were noted from the nmap-service-version.pcap:
+- This scan took a longer time to execute than the other 2.
+- This pcap file was over double the size of the previous 2.
+- There were a mix payloads sent to the victim that were tailored to specific services.
+- Different payloads could be sent to a specific service.
 
+The first 3 points suggest that a lot of tests were done by Nmap to determine the service versions used. The following illustrate this:
+- First is a GET request sent to port 80 (an HTTP port).
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/basic-get-port-80.png">
+- Second is a prompt on port 23 (a telnet port).
+- <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/telnet-probe.png">
+
+This explains the increased size of this file as more payloads were sent from Nmap instead of packets with empty payloads. Furthermore, it shows that tailored payloads were sent to specific protocols.
 
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
