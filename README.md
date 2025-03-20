@@ -256,14 +256,16 @@ The following key points were noted from the nmap-service-version.pcap:
 - This pcap file was over double the size of the previous 2.
 - There were a mix payloads sent to the victim that were tailored to specific services.
 - Different payloads could be sent to a specific service.
+- Some 404 responses to HTTP requests were sent from the victim.
 
-The first 3 points suggest that a lot of tests were done by Nmap to determine the service versions used. The following illustrate this:
-- First is a GET request sent to port 80 (an HTTP port).
+The first 3 points suggest that a lot of tests were done by Nmap to determine the service versions used. The 2 packets below illustrate this:
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/basic-get-port-80.png">
-- Second is a prompt on port 23 (a telnet port).
-- <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/telnet-probe.png">
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/telnet-probe.png">
+The first image is a GET request sent to port 80 (an HTTP port). The second is a prompt on port 23 (a telnet port). Tailored probes like this sent for all known services in Nmap's database would explain the increased size of this file since more payloads were sent instead of the usual packet headers. This and the last point will be important when suggesting improvements to the rule developed.
 
-This explains the increased size of this file as more payloads were sent from Nmap instead of packets with empty payloads. Furthermore, it shows that tailored payloads were sent to specific protocols.
+Instances of different payloads being sent to a specific service was the most critical information in crafting this rule. This discovery made it clear variations of packets could be sent when probing a service. Below is another GET request on port 80 with request target containing "nmap":
+
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/nmap-header-get.png">
 
 - Analyze Suricata logs to validate detections and refine rules.
 - Review false positives/negatives and adjust rule sensitivity.
