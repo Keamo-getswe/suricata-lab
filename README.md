@@ -83,8 +83,8 @@ The system was configured, booted and logged into. Given that Metasploitable 2 i
 
 ## Methodology - Attacking and Detecting:
 
-This section describes the steps taken to solve each challenge from [this repo](https://github.com/0xrajneesh/Suricata-IDS-Home-Lab). To monitor the communication between the attacker and the victim for each attack, tcpdump was initiated on the Suricata server and the network traffic was written to a pcap file as follows:<br>
-```sudo tcpdump -i <interface> -vvv -nn -w <exercise name>.pcap "host 192.168.134```<br>
+This section describes the steps taken to solve each challenge listed in [this repo](https://github.com/0xrajneesh/Suricata-IDS-Home-Lab). To monitor the communication between the attacker and the victim for each attack, tcpdump was initiated on the Suricata server and the network traffic was written to a pcap file as follows:<br>
+```sudo tcpdump -i <interface> -vvv -nn -w <exercise name>.pcap "host 192.168.134"```<br>
 Thereafter, an attack was launched and once completed, the packet analysis was stopped and the contents examined for patterns that could address each challenge. The findings from the examination of each attack are detailed in the Evaluation and Improvements section.
 
 ### Stealth Scan
@@ -222,7 +222,7 @@ This rule flags outbound payload transfers where the payload's header starts wit
 
 ## Evaluation and Improvements:
 
-This section describes the findings from examining the pcap files obtained in each attack. The files are named according to the theme of each challenge. Key properties of each attack are analysed, translated into a rule and the rule is then evaluated for real world efficacy. Where the behaviour of an attack could not be determined from the pcap file, an internet search was performed to learn more and was used to support the evaluation.  
+This section describes the findings from examining the pcap files obtained from each attack. The files are named according to the theme of each challenge. Key properties of each attack are analysed and translated into a rule which is then evaluated for real world efficacy. Where the behaviour of an attack could not be determined from the pcap file, an internet search was performed to learn more about the attack vector and was used to support the evaluation.  
 
 ### Stealth Scan
 
@@ -262,15 +262,24 @@ Consider the 2 packets below:
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/basic-get-port-80.png">
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/telnet-probe.png">
-The first packet is a GET request sent to port 80 (an HTTP port). The second is a prompt on port 23 (a telnet port). Tailored probes like this sent for all known services in Nmap's database would explain the increased processing time and size of this file since more payloads were sent instead of the usual empty payload packets. These and the last point will be important when suggesting improvements to the rule developed.
-
-Instances of different payloads being sent to a specific service was the most critical information in crafting this rule. This discovery made it clear variations of packets could be sent when probing a service. Below is another GET request on port 80 with request target containing "nmap":
+The first packet is a GET request sent to port 80 (an HTTP port). The second is a prompt on port 23 (a telnet port). Tailored probes like this sent for all known services in Nmap's database would explain the increased processing time and size of this file since more payloads were sent instead of the usual empty payload packets. These and the last point will be important when suggesting improvements to the rule developed. Instances of different payloads being sent to a specific service was the most critical information in crafting this rule. This discovery made it clear that variations of packets could be sent when probing a service. Below are other requests on port 80 with a request target and user agent containing the identifying marker "nmap":<br>
 
 <img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/nmap-header-get.png">
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/nmap-header-post.png">
 
-- Analyze Suricata logs to validate detections and refine rules.
-- Review false positives/negatives and adjust rule sensitivity.
-- Document findings and potential improvements to enhance Suricata’s detection capabilities.
+This confirms that Nmap sometimes includes self-identifying markers in its probes and was deemed an adequate search string . On the other hand, while this rule is effective in detecting a specific subset of Nmap service version probes that explicitly contain "nmap" in headers, it may miss:
+- Non-HTTP service probes (e.g., Telnet, SSH, SMTP, etc.).
+- Cases where Nmap does not use identifying markers in the header (Nmap can be configured to avoid using "nmap" in requests).
+- Encrypted services (e.g., HTTPS), where headers are not visible for inspection.
+
+Hence, to improve detection, additional rules should be created to match patterns of multiple service probes within a short time frame, or inspect known service response variations triggered by Nmap’s probes. Supporting network devices would be needed to address encrypted packet inspection, such as a TLS terminating proxy (e.g., NGINX, HAProxy, or Squid) in front of the traffic. This would provide a more robust approach to detecting Nmap service version scans beyond simple string matching in HTTP headers.
+
+### Metasploit Exploit Payload - Unreal IRC 3281 (add user payload)
+
+### Metasploit Reverse Shell - Leveraging the VSFTPD 2.3.4 vulnerability
+
+### Metasploit Meterpreter Communication - Upgrading the VSFTPD 2.3.4 shell
+
 
 ## Lessons Learned & Improvements:
 
