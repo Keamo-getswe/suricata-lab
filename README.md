@@ -276,6 +276,14 @@ Hence, to improve detection, additional rules should be created to match pattern
 
 ### Metasploit Exploit Payload - Unreal IRC 3281 (add user payload)
 
+This attack works by leveraging a hardcoded backdoor in the UnrealIRCd 3.2.8.1 software that is triggered by "AB;" followed by an arbitrary system command. This appeared in 2 packet payloads sent from the attacker on port 6667 as:
+```
+AB;echo 'metasploit:$1$Az$kf0BaRSqaSF9ewhqk5sMa :1121:1121::/://bin/sh'>>/etc/passwd;[ -f /etc/sudoers ]&&(echo 'metasploit ALL=(ALL:ALL) ALL'>>/etc/sudoers)
+```
+Informed by this, the rule is triggered when a packet contains the keyword "echo" to write a new user (metasploit, as seen in the options section in Methodology) into the /etc/passwd file or modify privileged access settings in the /etc/sudoers file. Additionally, a PCRE (Perl-Compatible Regular Expression) pattern is used to match attempts to access the aforementioned critical system files, further refining detection. By specifically targeting the combination of "echo" and these sensitive file paths, the rule effectively identifies the command injection technique used in the exploit.
+
+While this rule provides strong detection capabilities for this particular payload, it could be improved by including rules that address other Unreal IRC 3.2.8.1 payload signatures.
+
 ### Metasploit Reverse Shell - Leveraging the VSFTPD 2.3.4 vulnerability
 
 ### Metasploit Meterpreter Communication - Upgrading the VSFTPD 2.3.4 shell
