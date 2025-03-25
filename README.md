@@ -295,3 +295,11 @@ This rule successfully flags the transfer of this malicious ELF file, as the spe
 
 ## Conclusion:
 
+The exercises covered in this report demonstrate the effectiveness of detecting various attack techniques using Suricata IDS. The findings highlight the importance of defining rules that account for both basic and advanced threats, given the widespread use of hacking tools like Metasploit by script kiddies, as well as more sophisticated attacks by experienced hackers. By capturing network traffic during different attack scenarios and analyzing packet signatures, custom Suricata rules were successfully developed to identify stealth scans, OS fingerprinting attempts, service version probes, and various exploitation activities.
+
+The crafted rules effectively detected different attack patterns by analyzing unique characteristics such as repeated SYN packets, specific TTL values in ICMP traffic, and Metasploit payload signatures. These detections emphasize the crucial role of rule-based intrusion detection systems in proactively monitoring and securing network environments.
+
+Despite the success in detecting these attacks, further improvements can be made. Reducing false positives and improving detection accuracy can be achieved by fine-tuning threshold values and incorporating context-aware rule conditions. Additionally, integrating anomaly-detection machine learning models alongside rule-based detection could enhance Suricata’s ability to identify novel attack patterns.
+
+In conclusion, Suricata IDS provides a strong foundation for network intrusion detection. The results of this report underscore the need for continuous refinement of detection rules and adaptive security strategies to counter evolving cyber threats effectively. Future work could focus on integrating automated rule generation and dynamic threat intelligence updates to further strengthen network defense mechanisms.
+
